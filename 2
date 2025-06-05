@@ -1,0 +1,206 @@
+import numpy as np
+from scipy.linalg import solve
+import matplotlib.pyplot as plt
+np.set_printoptions(formatter={'float_kind': lambda x: f"{x:.6e}"}, linewidth=200)
+
+# 參數設定
+K = 0.1
+delta_r = 0.1
+delta_t = 0.5
+r_start = 0.5
+r_end = 1
+t_end = 10
+
+Nr = int((r_end - r_start) / delta_r) + 1
+Nt = int(t_end / delta_t) + 1
+
+r = np.linspace(r_start, r_end, Nr)
+t = np.linspace(0, t_end, Nt)
+
+# 初始條件
+T_init = 200 * (r - 0.5)
+
+# lambda
+lam = delta_t / (4 * K * delta_r**2)
+
+# Forward-Difference Method
+T_fd = np.zeros((Nt, Nr))
+T_fd[0, :] = T_init
+
+for n in range(0, Nt-1):
+    T_fd[n+1, -1] = 100 + 40 * t[n+1]  # 邊界條件 T(1,t)
+    for i in range(1, Nr-1):
+        T_fd[n+1, i] = T_fd[n, i] + lam * (
+            (T_fd[n, i+1] - 2*T_fd[n, i] + T_fd[n, i-1]) +
+            (delta_r / r[i]) * (T_fd[n, i+1] - T_fd[n, i-1]) / 2
+        )
+    T_fd[n+1, 0] = T_fd[n+1, 1] / (1 + 3*delta_r)
+
+print("=== Forward-Difference 所有時間點解 ===")
+for n in range(Nt):
+    print(f"t = {t[n]:.1f} : {T_fd[n, :]}")
+print()
+
+# Backward-Difference Method
+T_bd = np.zeros((Nt, Nr))
+T_bd[0, :] = T_init
+
+A = np.zeros((Nr, Nr))
+
+for n in range(0, Nt-1):
+    for i in range(1, Nr-1):
+        A[i, i-1] = -lam * (1 - delta_r / (2 * r[i]))
+        A[i, i]   = 1 + 2*lam
+        A[i, i+1] = -lam * (1 + delta_r / (2 * r[i]))
+    A[0,0] = 1 + 3*delta_r
+    A[0,1] = -1
+    A[Nr-1, Nr-1] = 1
+
+    b = T_bd[n, :]
+    b[Nr-1] = 100 + 40 * t[n+1]
+
+    T_bd[n+1, :] = solve(A, b)
+
+print("=== Backward-Difference 所有時間點解 ===")
+for n in range(Nt):
+    print(f"t = {t[n]:.1f} : {T_bd[n, :]}")
+print()
+
+# Crank-Nicolson Method
+T_cn = np.zeros((Nt, Nr))
+T_cn[0, :] = T_init
+
+for n in range(0, Nt-1):
+    A = np.zeros((Nr, Nr))
+    b = np.zeros(Nr)
+
+    for i in range(1, Nr-1):
+        a1 = -lam * (1 - delta_r / (2 * r[i]))
+        a2 = 1 + 2*lam
+        a3 = -lam * (1 + delta_r / (2 * r[i]))
+        A[i, i-1] = a1
+        A[i, i]   = a2
+        A[i, i+1] = a3
+
+        b[i] = lam * (1 - delta_r / (2 * r[i])) * T_cn[n, i-1] + \
+               (1 - 2*lam) * T_cn[n, i] + \
+               lam * (1 + delta_r / (2 * r[i])) * T_cn[n, i+1]
+
+    A[0,0] = 1 + 3*delta_r
+    A[0,1] = -1
+    b[0] = 0
+
+    A[Nr-1, Nr-1] = 1
+    b[Nr-1] = 100 + 40 * t[n+1]
+
+    T_cn[n+1, :] = solve(A, b)
+
+print("=== Crank-Nicolson 所有時間點解 ===")
+for n in ranimport numpy as np
+from scipy.linalg import solve
+import matplotlib.pyplot as plt
+np.set_printoptions(formatter={'float_kind': lambda x: f"{x:.6e}"}, linewidth=200)
+
+# 參數設定
+K = 0.1
+delta_r = 0.1
+delta_t = 0.5
+r_start = 0.5
+r_end = 1
+t_end = 10
+
+Nr = int((r_end - r_start) / delta_r) + 1
+Nt = int(t_end / delta_t) + 1
+
+r = np.linspace(r_start, r_end, Nr)
+t = np.linspace(0, t_end, Nt)
+
+# 初始條件
+T_init = 200 * (r - 0.5)
+
+# lambda
+lam = delta_t / (4 * K * delta_r**2)
+
+# Forward-Difference Method
+T_fd = np.zeros((Nt, Nr))
+T_fd[0, :] = T_init
+
+for n in range(0, Nt-1):
+    T_fd[n+1, -1] = 100 + 40 * t[n+1]  # 邊界條件 T(1,t)
+    for i in range(1, Nr-1):
+        T_fd[n+1, i] = T_fd[n, i] + lam * (
+            (T_fd[n, i+1] - 2*T_fd[n, i] + T_fd[n, i-1]) +
+            (delta_r / r[i]) * (T_fd[n, i+1] - T_fd[n, i-1]) / 2
+        )
+    T_fd[n+1, 0] = T_fd[n+1, 1] / (1 + 3*delta_r)
+
+print("=== Forward-Difference 所有時間點解 ===")
+for n in range(Nt):
+    print(f"t = {t[n]:.1f} : {T_fd[n, :]}")
+print()
+
+# Backward-Difference Method
+T_bd = np.zeros((Nt, Nr))
+T_bd[0, :] = T_init
+
+A = np.zeros((Nr, Nr))
+
+for n in range(0, Nt-1):
+    for i in range(1, Nr-1):
+        A[i, i-1] = -lam * (1 - delta_r / (2 * r[i]))
+        A[i, i]   = 1 + 2*lam
+        A[i, i+1] = -lam * (1 + delta_r / (2 * r[i]))
+    A[0,0] = 1 + 3*delta_r
+    A[0,1] = -1
+    A[Nr-1, Nr-1] = 1
+
+    b = T_bd[n, :]
+    b[Nr-1] = 100 + 40 * t[n+1]
+
+    T_bd[n+1, :] = solve(A, b)
+
+print("=== Backward-Difference 所有時間點解 ===")
+for n in range(Nt):
+    print(f"t = {t[n]:.1f} : {T_bd[n, :]}")
+print()
+
+# Crank-Nicolson Method
+T_cn = np.zeros((Nt, Nr))
+T_cn[0, :] = T_init
+
+for n in range(0, Nt-1):
+    A = np.zeros((Nr, Nr))
+    b = np.zeros(Nr)
+
+    for i in range(1, Nr-1):
+        a1 = -lam * (1 - delta_r / (2 * r[i]))
+        a2 = 1 + 2*lam
+        a3 = -lam * (1 + delta_r / (2 * r[i]))
+        A[i, i-1] = a1
+        A[i, i]   = a2
+        A[i, i+1] = a3
+
+        b[i] = lam * (1 - delta_r / (2 * r[i])) * T_cn[n, i-1] + \
+               (1 - 2*lam) * T_cn[n, i] + \
+               lam * (1 + delta_r / (2 * r[i])) * T_cn[n, i+1]
+
+    A[0,0] = 1 + 3*delta_r
+    A[0,1] = -1
+    b[0] = 0
+
+    A[Nr-1, Nr-1] = 1
+    b[Nr-1] = 100 + 40 * t[n+1]
+
+    T_cn[n+1, :] = solve(A, b)
+
+print("=== Crank-Nicolson 所有時間點解 ===")
+for n in range(Nt):
+    print(f"t = {t[n]:.1f} : {T_cn[n, :]}")
+print()
+
+
+ge(Nt):
+    print(f"t = {t[n]:.1f} : {T_cn[n, :]}")
+print()
+
+
