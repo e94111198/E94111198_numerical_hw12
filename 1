@@ -1,0 +1,52 @@
+import numpy as np
+
+# 定義區域與網格
+pi = np.pi
+h = 0.1 * pi
+k = h  # 題目說 h = k
+
+Nx = int(pi / h)  # x 方向格點數 (不包含邊界)
+Ny = int((pi/2) / k)  # y 方向格點數 (不包含邊界)
+
+# 創建 u 網格 (包含邊界格點)
+u = np.zeros((Nx+1, Ny+1))
+
+# 設定邊界條件
+x = np.linspace(0, pi, Nx+1)
+y = np.linspace(0, pi/2, Ny+1)
+
+# u(0, y) = cos y
+u[0, :] = np.cos(y)
+
+# u(pi, y) = -cos y
+u[Nx, :] = -np.cos(y)
+
+# u(x, 0) = cos x
+u[:, 0] = np.cos(x)
+
+# u(x, pi/2) = 0 (已經是 0)
+
+# 右邊函數 f(x, y) = x*y
+f = np.zeros((Nx+1, Ny+1))
+for i in range(Nx+1):
+    for j in range(Ny+1):
+        f[i, j] = x[i] * y[j]
+
+# Jacobi 迭代參數
+max_iter = 10000
+tol = 1e-6
+
+# Jacobi 迭代
+for iteration in range(max_iter):
+    u_old = u.copy()
+    for i in range(1, Nx):
+        for j in range(1, Ny):
+            u[i, j] = 0.25 * (u_old[i+1, j] + u_old[i-1, j] + u_old[i, j+1] + u_old[i, j-1] - h**2 * f[i, j])
+    
+    # 收斂檢查
+    if np.max(np.abs(u - u_old)) < tol:
+        print(f'Converged after {iteration} iterations')
+        break
+
+# 顯示結果
+print(u)
