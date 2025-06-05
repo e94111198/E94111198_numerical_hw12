@@ -1,0 +1,60 @@
+import numpy as np
+from numpy.linalg import solve
+
+# 參數設定
+Nr = 10   # r 方向格點數
+Ntheta = 10  # theta 方向格點數
+
+r_start = 0.5
+r_end = 1.0
+theta_start = 0.0
+theta_end = np.pi / 3
+
+delta_r = (r_end - r_start) / (Nr - 1)
+delta_theta = (theta_end - theta_start) / (Ntheta - 1)
+
+r = np.linspace(r_start, r_end, Nr)
+theta = np.linspace(theta_start, theta_end, Ntheta)
+
+N = Nr * Ntheta  # 總未知數數量
+
+# 建立係數矩陣 A 和常數向量 b
+A = np.zeros((N, N))
+b = np.zeros(N)
+
+# 格點編號對應公式
+def idx(i, j):
+    return i * Ntheta + j
+
+# 建立差分方程
+for i in range(Nr):
+    for j in range(Ntheta):
+        p = idx(i, j)
+
+        # 邊界條件
+        if j == 0 or j == Ntheta-1:
+            A[p, p] = 1.0
+            b[p] = 0.0
+        elif i == 0:
+            A[p, p] = 1.0
+            b[p] = 50.0
+        elif i == Nr-1:
+            A[p, p] = 1.0
+            b[p] = 100.0
+        else:
+            # 內部節點差分公式
+            rp = r[i]
+            A[p, idx(i+1, j)] = 1 / delta_r**2 + 1 / (2 * rp * delta_r)
+            A[p, idx(i-1, j)] = 1 / delta_r**2 - 1 / (2 * rp * delta_r)
+            A[p, idx(i, j+1)] = 1 / (rp**2 * delta_theta**2)
+            A[p, idx(i, j-1)] = 1 / (rp**2 * delta_theta**2)
+            A[p, p] = -2 / delta_r**2 - 2 / (rp**2 * delta_theta**2)
+
+# 解線性方程組
+T_flat = solve(A, b)
+T = T_flat.reshape((Nr, Ntheta))
+
+# 輸出結果
+np.set_printoptions(formatter={'float_kind': lambda x: f"{x:.6e}"}, linewidth=200)
+print("解得溫度場 T(r, θ)：")
+print(T)
