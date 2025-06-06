@@ -1,0 +1,40 @@
+import numpy as np
+
+# 參數設定
+dx = dt = 0.1
+x = np.arange(0, 1 + dx, dx)
+t = np.arange(0, 1 + dt, dt)  # 時間從 0 到 1，間隔 0.1
+nx = len(x)
+nt = len(t)
+
+# 初始化解矩陣
+p = np.zeros((nt, nx))
+
+# 初始條件
+p[0, :] = np.cos(2 * np.pi * x)
+dpdt_0 = 2 * np.pi * np.sin(2 * np.pi * x)
+
+# 邊界條件
+p[:, 0] = 1
+p[:, -1] = 2
+
+# 第一層時間：t = dt，根據初始速度條件估算
+p[1, 1:-1] = (
+    p[0, 1:-1]
+    + dt * dpdt_0[1:-1]
+    + 0.5 * (dt / dx) ** 2 * (p[0, 2:] - 2 * p[0, 1:-1] + p[0, :-2])
+)
+
+# 主時間迴圈：用顯式有限差分法更新解
+for n in range(1, nt - 1):
+    p[n + 1, 1:-1] = (
+        2 * p[n, 1:-1]
+        - p[n - 1, 1:-1]
+        + (dt / dx) ** 2 * (p[n, 2:] - 2 * p[n, 1:-1] + p[n, :-2])
+    )
+
+# 顯示結果：每個時間步對應一行
+print("Results (each row = p(x) at a time t):\n")
+for n in range(nt):
+    row = ", ".join([f"{val:.4f}" for val in p[n]])
+    print(f"t = {n*dt:.1f} -> [ {row} ]")
